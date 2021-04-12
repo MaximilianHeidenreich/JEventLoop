@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.maximilian-heidenreich</groupId>
-    <artifactId>JEventLoop</artifactId>
+    <groupId>de.maximilianheidenreich</groupId>
+    <artifactId>jeventloop</artifactId>
     <version>1.0.0</version>
 
     <properties>
@@ -36,7 +36,7 @@
         <repository>
             <id>github</id>
             <name>GitHub MaximilianHeidenreich Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/maximilianheidenreich/jeventloop</url>
+            <url>https://maven.pkg.github.com/maximilianheidenreich/JEventLoop</url>
         </repository>
     </distributionManagement>
 
