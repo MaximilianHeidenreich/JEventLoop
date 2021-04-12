@@ -248,7 +248,7 @@ If you do so, please follow the following steps:
 
 Maximilian Heidenreich - github@maximilian-heidenreich.de
 
-Project Link: [https://github.com/MaximilianHeidenreich/Snipp](https://github.com/MaximilianHeidenreich/Snipp)
+Project Link: [https://github.com/MaximilianHeidenreich/JEventLoop](https://github.com/MaximilianHeidenreich/JEventLoop)
 
 Project Icon: [https://github.com/MaximilianHeidenreich/JEventLoop/blob/master/assets/Icon-1024.png](https://github.com/MaximilianHeidenreich/JEventLoop/blob/master/assets/Icon-1024.png)
 
