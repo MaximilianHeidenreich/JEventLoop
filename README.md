@@ -97,7 +97,7 @@ I just wanted a simple EventLoop without* any other dependencies which could pro
         <dependency>
             <groupId>de.maximilianheidenreich</groupId>
             <artifactId>jeventloop</artifactId>
-            <version>1.0.0</version>
+            <version>1.1.0</version>
         </dependency>
     </dependencies>
     ....
