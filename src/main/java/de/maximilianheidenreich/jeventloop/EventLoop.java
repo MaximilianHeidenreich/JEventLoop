@@ -154,7 +154,7 @@ public class EventLoop implements Runnable {
 
         for (Iterator<CompletableFuture<Object>> iterator = getCallbackHandlers().get(id).iterator(); iterator.hasNext();) {
             CompletableFuture<Object> callback = iterator.next();
-            getExecutorService().submit(() ->callback.complete(object));        // Call directly in this thread??
+            getExecutorService().submit(() -> callback.complete(object));        // Call directly in this thread??
             iterator.remove();
         }
 
@@ -257,16 +257,6 @@ public class EventLoop implements Runnable {
     }
 
     /**
-     * Adds an event to the event queue.
-     *
-     * @param event
-     *          The event to enqueue
-     */
-    public void queueEvent(@NonNull Event event) {
-        getEventQueue().add(event);
-    }
-
-    /**
      * Adds an event to the event queue and returns a new {@link CompletableFuture} callback.
      * The callback can be completed from inside an event handler by calling {@link EventHandle#callback(Object)}.
      *
@@ -275,10 +265,10 @@ public class EventLoop implements Runnable {
      * @return
      *          The new CompletableFuture callback
      */
-    public CompletableFuture<Object> queueAsyncEvent(@NonNull Event event) {
+    public CompletableFuture<Object> queueEvent(@NonNull Event event) {
         CompletableFuture<Object> callback = new CompletableFuture<>();
         addCallbackHandler(event.getId(), callback);
-        queueEvent(event);
+        getEventQueue().add(event);
         return callback;
     }
 
