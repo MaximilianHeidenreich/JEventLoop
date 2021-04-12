@@ -95,7 +95,7 @@ I just wanted a simple EventLoop without* any other dependencies which could pro
     ...
     <dependencies>
         <dependency>
-            <groupId>de.maximilianheidenreich</groupId>
+            <groupId>de.maximilian-heidenreich</groupId>
             <artifactId>jeventloop</artifactId>
             <version>1.1.0</version>
         </dependency>
