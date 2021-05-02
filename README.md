@@ -74,7 +74,8 @@ I just wanted a simple EventLoop without* any other dependencies which could pro
     - [x] Handle events with multiple custom handler functions
     - [x] Prioritize specific events if necessary
 - [x] Callbacks
-    - [x] Queue events with callbacks which can be executed from inside event handlers.
+    - [x] Queue events with callbacks that can be completed from inside event handlers.
+- [x] Multithreaded
 
 <br>
 
@@ -97,7 +98,7 @@ I just wanted a simple EventLoop without* any other dependencies which could pro
         <dependency>
             <groupId>de.maximilian-heidenreich</groupId>
             <artifactId>jeventloop</artifactId>
-            <version>1.1.0</version>
+            <version>2.0.0</version>
         </dependency>
     </dependencies>
     ....
@@ -109,45 +110,45 @@ I just wanted a simple EventLoop without* any other dependencies which could pro
 Custom events can be used to execute specific handlers for specific events. Custom events can store any data 
 or logic you want them to. Just extends the default Event class and implement anything you need.
 
+The `Event` class has a generic argument `D` which indicates the type of data that can be consumed inside callbacks.
+If your event does not need callbacks, feel free to use the `Void` type.
+
 **⚠️ Make sure to call `super()` inside any custom constructor! Otherwise, your event won't be handled!**
 
 ```java
-import de.maximilianheidenreich.jeventloop.events.Event;
+class MyCoolEvent extends Event<D> {        // "D" is the type of data your callbacks can consume.
 
-class MyCoolEvent extends Event {
-  
     // You can store custom data associated with your event
     public String message;
-    
-    // You can use 
+
+    // You can use a custom constructor to initialize your custom event
     public MyCoolEvent(String message) {
         super();    // ! Call super() ! Otherwise the event is corrupted and will be ignored !
         this.message = message;
     }
-    
+
     // You can add custom logic to your event
     public void print() {
         System.out.println(this.message);
     }
-    
+
 }
 ```
 
 #### Setup an EventLoop
 
 ```java
-import de.maximilianheidenreich.jeventloop.EventLoop;
-
 class Main {
     public static void main(String[] args) {
 
-        EventLoop eventLoop = new EventLoop();
-        
-        // EITHER: Starts the event loop as a separate thread -> Non-Blocking
-        eventLoop.start();
-        
-        // OR: Run the event loop in this thread -> Blocking
-        eventLoop.run();
+      // Create a default event loop (dispatcher: SingleThreadedExecutor, task executor: workStealingExecutor)
+      EventLoop eventLoop = new EventLoop();
+      
+      // OR: Provide custom Executors
+      EventLoop eventLoop = new EventLoop(dispatchExecutor, taskExecutor);
+  
+      // Start the event loop (You probably want to register some handlers first tho!)
+      eventLoop.start();
 
     }
 }
@@ -160,18 +161,15 @@ You can register as many as you need, and they will be executed in order *(first
 **⚠️ Make sure any code you call inside your handlers is thread safe!**
 
 ```java
-import de.maximilianheidenreich.jeventloop.EventHandle;
-import de.maximilianheidenreich.jeventloop.EventLoop;
-
 class Main {
     public static void main(String[] args) {
 
         // ...
 
         // You can add a simple lambda function for small handlers
-        eventLoop.addEventHandler(MyAwesomeEvent.class, (handle) -> {
-            MyAwesomeEvent event = (MyAwesomeEvent) handle.getEvent();
-            // Do some work
+        eventLoop.addEventHandler(MyAwesomeEvent.class, (event) -> {
+            event.print();
+            // Do some other stuff
         });
 
         // You can add a function reference for bigger tasks
@@ -179,46 +177,52 @@ class Main {
 
     }
 
-    public static void bigHandleLogic(EventHandle handle) {
-        MyAwesomeEvent event = (MyAwesomeEvent) handle.getEvent();
+    public static void bigHandleLogic(MyAwesomeEvent event) {
 
         // Do some work e.g. process data
         String data = event.message.toUpperCase();
-        
-        // If you want to break the chain of execution (stop executing handlers registered after this one) call:
-        handle.cancel();
-      
-        // If there was an exception, just throw it!
-        // It will get handled, logged and other handlers ill continue to execute!
+
+        // If you want to break the chain of execution (stop executing handlers registered after this one):
+        event.cancel();
+
+        // If there was an uncaught exception, it will get logged and succeeding handler
+        // will still get executed!
         throw new Exception("Oops, something went wrong!");
-      
-        // Optionally call callbacks when the data is ready
-        handle.callback(data);
+
+        // Optionally complete callbacks when the data is ready
+        event.complete(data);
+        
+        // Optionally except callbacks which gives you the opportunity to handle exceptions
+        event.except(new Exception("You should really use a custom exception to know ehat went wrong!"));
+        
     }
 }
 ```
 
 #### Queue an Event
 
+If you enqueue an event, it will be handled some time in the future. If you depend on some returning data, 
+you can use the returned `CompletableFuture<D>` to handle your data / any exceptions.
+
+A possible usecase could be inside a networking application where you need to send a request and handle a response 
+for it you will receive some time in the future.
+
 **⚠️ Make sure any code you call inside your callbacks is thread safe!**
 
 ```java
-import de.maximilianheidenreich.jeventloop.EventLoop;
 class Main {
     public static void main(String[] args) {
 
-        EventLoop eventLoop = new EventLoop();
-        //...
-        
         // Queue an event and ignore any callbacks
-        eventLoop.queueEvent(new MyAwesomeEvent("Hello World"));
-        
-        // Queue an event and register a callback
-        eventLoop.queueEvent(new MyAwesomeEvent("Hello Async World"))
-            .thenApply((data) -> {
-                System.out.println("Got my processed data: " + data);    // Do some work in a callback
-            });
-        
+        eventLoop.dispatch(new MyAwesomeEvent("Hello World"));
+
+        // Queue an event and handle callback data / exceptions
+        eventLoop.dispatch(new MyAwesomeEvent("Hello Async World"))
+                .thenApply(data -> {
+                    System.out.println("Got my processed data: " + data);
+                })
+                .exceptionally(ex -> { ex.printStackTrace(); });
+
         //...
     }
 }
@@ -227,7 +231,60 @@ class Main {
 <!-- BENCHMARK -->
 ## Benchmark
 
-Todo :)
+| Iterations | Average time / event | System                        | Description                                                                                                                           |
+|------------|----------------------|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| 200 000    | < 0.5ms              | Mac Mini M1 (2020) - 16GB ram | Time measured from creating the event instance till callback execution. Note: This was executed while my system was at ~50% CPU load. |
+|            |                      |                               |                                                                                                                                       |
+|            |                      |                               |                                                                                                                                       |
+
+**Note:** This is just a rough benchmark to test weather it can handle a good amount of throughput.
+If you want to benchmark it yourself, feel free to do so and create a pull request afterwards to update the README.
+
+**Benchmark code:**
+
+```java
+class Main {
+    public static void main(String[] args) {
+
+        ConsoleAppender console = new ConsoleAppender();
+        String PATTERN = "%d %5p | %20C{1} | %m%n";
+        console.setLayout(new PatternLayout(PATTERN));
+        console.activateOptions();
+        Logger.getRootLogger().addAppender(console);
+        Logger.getRootLogger().setLevel(Level.ERROR);
+        Logger.getRootLogger().info("Starting ...");
+
+        EventLoop eventLoop = new EventLoop();
+        eventLoop.addEventHandler(TimingEvent.class, Test::testHandler);
+
+        eventLoop.start();
+        
+        AtomicLong sum = new AtomicLong();
+        Random ran = new Random();
+        int iterations = 200000;
+        int i;
+        for (i = 0; i < iterations; i++) {
+            System.out.println("Current iteration: " + i);
+            TimingEvent e = new TimingEvent(System.currentTimeMillis());
+            eventLoop.dispatch(e)
+                    .thenAccept(s -> {
+                        System.out.println("\t\t" + s + " ms");
+                        sum.addAndGet(s.intValue());
+                    });
+            Thread.sleep(ran.nextInt(1));
+        }
+        while (i != iterations) {}
+
+        System.out.println("Average time: " + sum.longValue() / iterations  + "ms");
+        
+    }
+
+    public static void testHandler(TimingEvent event) {
+        event.complete(event.getCurrentTimeDiff());
+    }
+}
+
+```
 
 <!-- CONTRIBUTING -->
 ## Contributing
