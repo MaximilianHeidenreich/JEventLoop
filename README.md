@@ -111,23 +111,23 @@ Custom events can be used to execute specific handlers for specific events. Cust
 or logic you want them to. Just extends the default Event class and implement anything you need.
 
 The `Event` class has a generic argument `D` which indicates the type of data that can be consumed inside callbacks.
-If your event does not need callbacks, feel free to use the `Void` type.
+If your Event does not need callbacks, feel free to use the `Void` type.
 
-**⚠️ Make sure to call `super()` inside any custom constructor! Otherwise, your event won't be handled!**
+**⚠️ Make sure to call `super()` inside any custom constructor! Otherwise, your Event won't be handled!**
 
 ```java
-class MyCoolEvent extends Event<D> {        // "D" is the type of data your callbacks can consume.
+class MyCoolEvent extends AbstractEvent<D> {        // "D" is the type of data your callbacks can consume.
 
-    // You can store custom data associated with your event
+    // You can store custom data associated with your Event
     public String message;
 
-    // You can use a custom constructor to initialize your custom event
+    // You can use a custom constructor to initialize your custom Event
     public MyCoolEvent(String message) {
-        super();    // ! Call super() ! Otherwise the event is corrupted and will be ignored !
+        super();    // ! Call super() ! Otherwise the Event is corrupted and will be ignored !
         this.message = message;
     }
 
-    // You can add custom logic to your event
+    // You can add custom logic to your Event
     public void print() {
         System.out.println(this.message);
     }
@@ -141,20 +141,20 @@ class MyCoolEvent extends Event<D> {        // "D" is the type of data your call
 class Main {
     public static void main(String[] args) {
 
-      // Create a default event loop (dispatcher: SingleThreadedExecutor, task executor: workStealingExecutor)
+      // Create a default Event loop (dispatcher: SingleThreadedExecutor, task executor: workStealingExecutor)
       EventLoop eventLoop = new EventLoop();
       
       // OR: Provide custom Executors
       EventLoop eventLoop = new EventLoop(dispatchExecutor, taskExecutor);
   
-      // Start the event loop (You probably want to register some handlers first tho!)
+      // Start the Event loop (You probably want to register some handlers first tho!)
       eventLoop.start();
 
     }
 }
 ```
 
-#### Register event handlers
+#### Register Event handlers
 
 You can register as many as you need, and they will be executed in order *(first registered -> first executed)*.
 
@@ -183,7 +183,7 @@ class Main {
         String data = event.message.toUpperCase();
 
         // If you want to break the chain of execution (stop executing handlers registered after this one):
-        event.cancel();
+        Event.cancel();
 
         // If there was an uncaught exception, it will get logged and succeeding handler
         // will still get executed!

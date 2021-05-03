@@ -5,7 +5,7 @@ import lombok.Getter;
 /**
  * A test event which stores timing data.
  */
-public class TimingEvent extends Event<Long> {
+public class TimingEvent extends AbstractEvent<Long> {
 
     // ======================   VARS
 

@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
  * Represents an event that can be enqueued by the EventLoop at any time.
  */
 @Getter
-public class Event <D> implements Comparable<Event<?>> {
+public class AbstractEvent<D> implements Comparable<AbstractEvent<?>> {
 
     // ======================   VARS
 
@@ -39,16 +39,16 @@ public class Event <D> implements Comparable<Event<?>> {
 
     // ======================   CONSTRUCTOR
 
-    public Event() {
+    public AbstractEvent() {
         this(UUID.randomUUID());
     }
-    public Event(byte priority) {
+    public AbstractEvent(byte priority) {
         this(UUID.randomUUID(), priority);
     }
-    public Event(UUID id) {
+    public AbstractEvent(UUID id) {
         this(id, (byte) 5);
     }
-    public Event(UUID id, byte priority) {
+    public AbstractEvent(UUID id, byte priority) {
         this.id = id;
         this.priority = priority;
         this.callbacks = new HashSet<>();
@@ -97,7 +97,7 @@ public class Event <D> implements Comparable<Event<?>> {
 
     /**
      * Completes all registered callbacks without data.
-     * -> Should only be used when using Event<Void>
+     * -> Should only be used when using AbstractEvent<Void>
      */
     public void complete() {
         getCallbacks().forEach(c -> c.complete(null));
@@ -122,16 +122,16 @@ public class Event <D> implements Comparable<Event<?>> {
     }
 
     /**
-     * Compares this event to another by their priorities.
-     * This is used by the event loop queue to prioritize different events.
+     * Compares this abstractEvent to another by their priorities.
+     * This is used by the abstractEvent loop queue to prioritize different events.
      *
-     * @param event
-     *          The event to compare itself with
+     * @param abstractEvent
+     *          The abstractEvent to compare itself with
      * @return
      */
     @Override
-    public int compareTo(Event event) {
-        return Integer.compare(event.getPriority(), getPriority());
+    public int compareTo(AbstractEvent abstractEvent) {
+        return Integer.compare(abstractEvent.getPriority(), getPriority());
     }
 
     @Override

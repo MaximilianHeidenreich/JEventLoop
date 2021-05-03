@@ -1,6 +1,7 @@
 package de.maximilianheidenreich.jeventloop;
 
-import de.maximilianheidenreich.jeventloop.events.Event;
+import de.maximilianheidenreich.jeventloop.events.AbstractEvent;
+import de.maximilianheidenreich.jeventloop.events.TimingEvent;
 import de.maximilianheidenreich.jeventloop.threading.DispatcherThread;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,7 +34,7 @@ public class EventLoop {
     /**
      * Stores new events. Gets consumed by task executor thread pool.
      */
-    private final BlockingQueue<Event<?>> eventQueue;
+    private final BlockingQueue<AbstractEvent<?>> abstractEventQueue;
 
     /**
      * The dispatcher which consumes the queue and.
@@ -49,14 +50,15 @@ public class EventLoop {
     /**
      * All registered handlers which will be executed if an event with matching class is dequeued.
      */
-    private final Map<Class<? extends Event<?>>, List<Consumer<? extends Event<?>>>> handlers;
+    private final Map<Class<? extends AbstractEvent<?>>, List<Consumer<? extends AbstractEvent<?>>>> handlers;
 
 
     // ======================   CONSTRUCTOR
 
     public EventLoop(ExecutorService dispatchExecutor, ExecutorService taskExecutor) {
         this.logger = Logger.getLogger(this.getClass().getName());
-        this.eventQueue = new PriorityBlockingQueue<>();
+        this.running = false;
+        this.abstractEventQueue = new PriorityBlockingQueue<>();
         this.dispatchExecutor = dispatchExecutor;
         this.taskExecutor = taskExecutor;
         this.handlers = new HashMap<>();
@@ -69,7 +71,7 @@ public class EventLoop {
     // ======================   HANDLER MANAGEMENT
 
     /**
-     * Adds a handler function which will get executed once an Event with the matching clazz is dispatched.
+     * Adds a handler function which will get executed once an AbstractEvent with the matching clazz is dispatched.
      *
      * @param clazz
      *          The class identifying the event for which the handler will be executed
@@ -77,7 +79,7 @@ public class EventLoop {
      *          The handler function
      */
     @Synchronized
-    public <E extends Event<?>> void addEventHandler(Class<E> clazz, Consumer<E> handler) {
+    public <E extends AbstractEvent<?>> void addEventHandler(Class<E> clazz, Consumer<E> handler) {
 
         // Todo: Check null?
 
@@ -98,7 +100,7 @@ public class EventLoop {
      *          {@code true} if the handler was actually removed | {@code false} if no matching handler was registered
      */
     @Synchronized
-    public <E extends Event<?>> boolean removeEventHandler(Class<E> clazz, Consumer<E> handler) {
+    public <E extends AbstractEvent<?>> boolean removeEventHandler(Class<E> clazz, Consumer<E> handler) {
 
         // RET: No handlers for class
         if (!getHandlers().containsKey(clazz))
@@ -119,14 +121,14 @@ public class EventLoop {
      * @return
      *          A default callback | {@code null} If the event is invalid.
      */
-    public <D, E extends Event<D>> CompletableFuture<D> dispatch(E event) {
+    public <D, E extends AbstractEvent<D>> CompletableFuture<D> dispatch(E event) {
 
         // RET: Invalid event.
         if (event.getId() == null) return null;
 
         CompletableFuture<D> callback = new CompletableFuture<>();
         event.addCallback(callback);
-        getEventQueue().add(event);
+        getAbstractEventQueue().add(event);
         return callback;
     }
 

@@ -1,7 +1,7 @@
 package de.maximilianheidenreich.jeventloop.threading;
 
 import de.maximilianheidenreich.jeventloop.EventLoop;
-import de.maximilianheidenreich.jeventloop.events.Event;
+import de.maximilianheidenreich.jeventloop.events.AbstractEvent;
 import lombok.Getter;
 import org.apache.log4j.Logger;
 
@@ -37,9 +37,9 @@ public class DispatcherThread implements Runnable {
     @Override
     public void run() {
         try {
-            while (!Thread.currentThread().isInterrupted()) {
-                Event<?> event = getEventLoop().getEventQueue().take();
-                getEventLoop().getTaskExecutor().submit(new ExecutorThread<>(getEventLoop(), event));
+            while (!Thread.currentThread().isInterrupted() && !getEventLoop().getDispatchExecutor().isShutdown()) {
+                AbstractEvent<?> abstractEvent = getEventLoop().getAbstractEventQueue().take();
+                getEventLoop().getTaskExecutor().submit(new ExecutorThread<>(getEventLoop(), abstractEvent));
             }
         } catch (InterruptedException e) {
             getLogger().debug("Interrupted DispatcherThead " + Thread.currentThread());
