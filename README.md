@@ -231,19 +231,27 @@ class Main {
 <!-- BENCHMARK -->
 ## Benchmark
 
-| Iterations | Average time / event | System                        | Description                                                                                                                           |
-|------------|----------------------|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| 200 000    | < 0.5ms              | Mac Mini M1 (2020) - 16GB ram | Time measured from creating the event instance till callback execution. Note: This was executed while my system was at ~50% CPU load. |
-|            |                      |                               |                                                                                                                                       |
-|            |                      |                               |                                                                                                                                       |
+| Iterations | Average time / event | System                        | Description                                                                          |
+|------------|----------------------|-------------------------------|--------------------------------------------------------------------------------------|
+| 200 000    | < 0.5ms              | Mac Mini M1 (2020) - 16GB ram | No Thread.sleep()                                                                    |
+|  20 000    |   1  ms              | Mac Mini M1 (2020) - 16GB ram | Random Thread.sleep(t) after each dispatch (0 < t < 6) & inside handler (0 < t < 4)  |
+|            |                      |                               |                                                                                      |
 
-**Note:** This is just a rough benchmark to test weather it can handle a good amount of throughput.
+**Note:**
+These benchmarks do not reflect real application usage but try to simulate it somewhat using Thread.sleep() with random intervals.
+
+- Time measured from creating the event instance till callback execution.
+- The code was executed while my system was at ~50% CPU load.
+- This is just a rough benchmark to test whether it can handle a good amount of basic throughput.
 If you want to benchmark it yourself, feel free to do so and create a pull request afterwards to update the README.
 
 **Benchmark code:**
 
 ```java
 class Main {
+
+    static Random ran = new Random();
+    
     public static void main(String[] args) {
 
         ConsoleAppender console = new ConsoleAppender();
@@ -260,9 +268,9 @@ class Main {
         eventLoop.start();
         
         AtomicLong sum = new AtomicLong();
-        Random ran = new Random();
         int iterations = 200000;
         int i;
+        AtomicInteger completed = new AtomicInteger();
         for (i = 0; i < iterations; i++) {
             System.out.println("Current iteration: " + i);
             TimingEvent e = new TimingEvent(System.currentTimeMillis());
@@ -270,16 +278,23 @@ class Main {
                     .thenAccept(s -> {
                         System.out.println("\t\t" + s + " ms");
                         sum.addAndGet(s.intValue());
+                        completed.addAndGet(1);
                     });
-            Thread.sleep(ran.nextInt(1));
+            Thread.sleep(ran.nextInt(7));
         }
-        while (i != iterations) {}
+        while (completed != iterations) {}
 
         System.out.println("Average time: " + sum.longValue() / iterations  + "ms");
         
     }
 
     public static void testHandler(TimingEvent event) {
+        try {
+            int s = ran.nextInt(4);
+            Thread.sleep(s);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         event.complete(event.getCurrentTimeDiff());
     }
 }
