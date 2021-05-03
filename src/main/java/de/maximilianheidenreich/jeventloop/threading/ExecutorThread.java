@@ -4,22 +4,18 @@ import de.maximilianheidenreich.jeventloop.EventLoop;
 import de.maximilianheidenreich.jeventloop.events.AbstractEvent;
 import de.maximilianheidenreich.jeventloop.utils.ExceptionUtils;
 import lombok.Getter;
-import org.apache.log4j.Logger;
+import lombok.extern.log4j.Log4j;
 
 import java.util.function.Consumer;
 
 /**
  * Gets started from the DispatcherThread class. It handles a dequeued abstractEvent.
  */
+@Log4j
 @Getter
 public class ExecutorThread <D> implements Runnable {
 
     // ======================   VARS
-
-    /**
-     * Internal logger.
-     */
-    private final Logger logger;
 
     /**
      * A reference to the abstractEvent loop.
@@ -35,7 +31,6 @@ public class ExecutorThread <D> implements Runnable {
     // ======================   CONSTRUCTOR
 
     public ExecutorThread(EventLoop eventLoop, AbstractEvent<D> abstractEvent) {
-        this.logger = Logger.getLogger(this.getClass().getName());
         this.eventLoop = eventLoop;
         this.abstractEvent = abstractEvent;
     }
@@ -45,7 +40,7 @@ public class ExecutorThread <D> implements Runnable {
 
     @Override
     public void run() {
-        getLogger().debug(String.format("Started new ExecutorThread for %s", getAbstractEvent().toString()));
+        log.debug(String.format("[EventLoop] Started new ExecutorThread for %s", getAbstractEvent().toString()));
 
         Thread.currentThread().setPriority(abstractEvent.getPriority());
         Thread.currentThread().setName(
@@ -63,7 +58,7 @@ public class ExecutorThread <D> implements Runnable {
         for (Consumer<? extends AbstractEvent<?>> rawHandler : getEventLoop().getHandlers().get(abstractEvent.getClass())) {
 
             if (getAbstractEvent().isCanceled()) {
-                getLogger().debug(String.format("Stopped ExecutorThread %s due to abstractEvent cancellation!", Thread.currentThread()));
+                log.debug(String.format("[EventLoop] Stopped ExecutorThread %s due to abstractEvent cancellation!", Thread.currentThread()));
                 break;
             }
 
@@ -71,7 +66,7 @@ public class ExecutorThread <D> implements Runnable {
 
             try { handler.accept(getAbstractEvent()); }
             catch (Exception e) {
-               getLogger().error(ExceptionUtils.getStackTraceAsString(e));
+                log.error(ExceptionUtils.getStackTraceAsString(e));
             }
 
         }
