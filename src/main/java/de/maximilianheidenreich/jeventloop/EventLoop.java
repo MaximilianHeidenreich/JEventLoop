@@ -26,6 +26,11 @@ public class EventLoop {
     private final Logger logger;
 
     /**
+     * Whether the eventLoop is running.
+     */
+    private boolean running;
+
+    /**
      * Stores new events. Gets consumed by task executor thread pool.
      */
     private final BlockingQueue<Event<?>> eventQueue;
@@ -132,12 +137,27 @@ public class EventLoop {
      * Starts the dispatcher thread.
      */
     public void start() {
+
+        // RET: Already running!
+        if (isRunning()) return;
+
         getDispatchExecutor().submit(new DispatcherThread(this));
+        setRunning(true);
     }
 
     /**
-     * Stops the dispatcher thread. Note: This will not stop anny running executor threads.
+     * Calls shutdown() on dispatcher & executor executorService.
+     * Note: THis does not instantly shut them down.
      */
-    public void stop() {}
+    public void stop() {
+
+        // RET: Not running.
+        if (!isRunning()) return;
+
+        getDispatchExecutor().shutdown();
+        getTaskExecutor().shutdown();
+        dispatch(new TimingEvent(0));   // Dirty hack to make sure the dispatcher can at least pull 1 last event from the queue and shuts down.
+        setRunning(false);
+    }
 
 }
