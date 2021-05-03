@@ -187,7 +187,7 @@ class Main {
 
         // If there was an uncaught exception, it will get logged and succeeding handler
         // will still get executed!
-        throw new Exception("Oops, something went wrong!");
+        throw new RuntimeException("Oops, something went wrong!");
 
         // Optionally complete callbacks when the data is ready
         event.complete(data);
