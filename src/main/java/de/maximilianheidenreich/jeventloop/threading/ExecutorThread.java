@@ -42,7 +42,8 @@ public class ExecutorThread <D> implements Runnable {
     public void run() {
         log.debug(String.format("[EventLoop] Started new ExecutorThread for %s", getAbstractEvent().toString()));
 
-        Thread.currentThread().setPriority(abstractEvent.getPriority());
+        byte priority = abstractEvent.getPriority();
+        Thread.currentThread().setPriority((priority < 1 || priority > 10) ? 5 : abstractEvent.getPriority());      // Use default priority if event priority is invalid!
         Thread.currentThread().setName(
                 String.format(
                         "ExecutorThread for %s | %s",
