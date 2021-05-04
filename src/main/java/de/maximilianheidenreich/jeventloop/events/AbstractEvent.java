@@ -91,6 +91,7 @@ public class AbstractEvent<D> implements Comparable<AbstractEvent<?>> {
      */
     @Synchronized
     public void addCallback(CompletableFuture<D> callback) {
+        if (callback == null) return;
         getCallbacks().add(callback);
     }
 
@@ -105,7 +106,6 @@ public class AbstractEvent<D> implements Comparable<AbstractEvent<?>> {
     @Synchronized
     public boolean removeCallback(CompletableFuture<D> callback) {
         return getCallbacks().remove(callback);
-
     }
 
 

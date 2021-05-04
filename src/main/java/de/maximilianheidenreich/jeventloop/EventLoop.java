@@ -86,7 +86,7 @@ public class EventLoop {
     @Synchronized
     public <E extends AbstractEvent<?>> void addEventHandler(Class<E> clazz, Consumer<E> handler) {
 
-        // Todo: Check null?
+        if (clazz == null || handler == null) return;
 
         if (!getHandlers().containsKey(clazz))
             getHandlers().put(clazz, new ArrayList<>());
@@ -106,6 +106,8 @@ public class EventLoop {
      */
     @Synchronized
     public <E extends AbstractEvent<?>> boolean removeEventHandler(Class<E> clazz, Consumer<E> handler) {
+
+        if (handler == null) return false;
 
         // RET: No handlers for class
         if (!getHandlers().containsKey(clazz))
@@ -129,7 +131,7 @@ public class EventLoop {
     public <D, E extends AbstractEvent<D>> CompletableFuture<D> dispatch(E event) {
 
         // RET: Invalid event.
-        if (event.getId() == null) return null;
+        if (event == null || event.getId() == null) return null;
 
         log.trace("[EventLoop] Dispatching event " + event);
 
