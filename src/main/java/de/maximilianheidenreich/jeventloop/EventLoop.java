@@ -62,7 +62,7 @@ public class EventLoop {
         this.abstractEventQueue = new PriorityBlockingQueue<>();
         this.dispatchExecutor = dispatchExecutor;
         this.taskExecutor = taskExecutor;
-        this.handlers = new HashMap<>();
+        this.handlers = new ConcurrentHashMap<>();
     }
 
     /**
@@ -83,7 +83,6 @@ public class EventLoop {
      * @param handler
      *          The handler function
      */
-    @Synchronized
     public <E extends AbstractEvent<?>> void addEventHandler(Class<E> clazz, Consumer<E> handler) {
 
         if (clazz == null || handler == null) return;
@@ -104,7 +103,6 @@ public class EventLoop {
      * @return
      *          {@code true} if the handler was actually removed | {@code false} if no matching handler was registered
      */
-    @Synchronized
     public <E extends AbstractEvent<?>> boolean removeEventHandler(Class<E> clazz, Consumer<E> handler) {
 
         if (handler == null) return false;
