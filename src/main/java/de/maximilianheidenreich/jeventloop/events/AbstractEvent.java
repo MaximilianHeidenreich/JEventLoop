@@ -39,15 +39,41 @@ public class AbstractEvent<D> implements Comparable<AbstractEvent<?>> {
 
     // ======================   CONSTRUCTOR
 
+    /**
+     * Creates a new AbstractEvent with a random id and default priority.
+     */
     public AbstractEvent() {
         this(UUID.randomUUID());
     }
+
+    /**
+     * Creates a new AbstractEvent with the given priority.
+     *
+     * @param priority
+     *          The priority to use (1 < priority <= 10)
+     */
     public AbstractEvent(byte priority) {
         this(UUID.randomUUID(), priority);
     }
+
+    /**
+     * Creates a new AbstractEvent with the given id and default priority.
+     *
+     * @param id
+     *          The id to use
+     */
     public AbstractEvent(UUID id) {
         this(id, (byte) 5);
     }
+
+    /**
+     * Creates a new AbstractEvent with the given id and priority.
+     *
+     * @param id
+     *          The id to use
+     * @param priority
+     *          The priority to use (1 < priority <= 10)
+     */
     public AbstractEvent(UUID id, byte priority) {
         this.id = id;
         this.priority = priority;

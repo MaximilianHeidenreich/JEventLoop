@@ -5,9 +5,7 @@ import de.maximilianheidenreich.jeventloop.events.TimingEvent;
 import de.maximilianheidenreich.jeventloop.threading.DispatcherThread;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.Synchronized;
 import lombok.extern.log4j.Log4j;
-import org.apache.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -51,6 +49,14 @@ public class EventLoop {
 
     // ======================   CONSTRUCTOR
 
+    /**
+     * Creates a new EventLoop with custom executor services.
+     *
+     * @param dispatchExecutor
+     *          The {@link ExecutorService} which is used to dequeue events and submit new {@link ExecutorThread}
+     * @param taskExecutor
+     *          The {@link ExecutorService} which will call event handlers & callbacks
+     */
     public EventLoop(ExecutorService dispatchExecutor, ExecutorService taskExecutor) {
         this.running = false;
         this.abstractEventQueue = new PriorityBlockingQueue<>();
@@ -58,6 +64,10 @@ public class EventLoop {
         this.taskExecutor = taskExecutor;
         this.handlers = new HashMap<>();
     }
+
+    /**
+     * Creates a new EventLoop with default {@link ExecutorService}s.
+     */
     public EventLoop() {
         this(Executors.newSingleThreadExecutor(), Executors.newWorkStealingPool());
     }
