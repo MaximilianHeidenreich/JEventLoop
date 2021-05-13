@@ -4,14 +4,14 @@ import de.maximilianheidenreich.jeventloop.EventLoop;
 import de.maximilianheidenreich.jeventloop.events.AbstractEvent;
 import de.maximilianheidenreich.jeventloop.utils.ExceptionUtils;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.java.Log;
 
 import java.util.function.Consumer;
 
 /**
  * Gets started from the DispatcherThread class. It handles a dequeued abstractEvent.
  */
-@Log4j
+@Log
 @Getter
 public class ExecutorThread <D> implements Runnable {
 
@@ -40,7 +40,7 @@ public class ExecutorThread <D> implements Runnable {
 
     @Override
     public void run() {
-        log.debug(String.format("[EventLoop] Started new ExecutorThread for %s", getAbstractEvent().toString()));
+        log.fine(String.format("[EventLoop] Started new ExecutorThread for %s", getAbstractEvent().toString()));
 
         byte priority = abstractEvent.getPriority();
         Thread.currentThread().setPriority((priority < 1 || priority > 10) ? 5 : abstractEvent.getPriority());      // Use default priority if event priority is invalid!
@@ -59,15 +59,17 @@ public class ExecutorThread <D> implements Runnable {
         for (Consumer<? extends AbstractEvent<?>> rawHandler : getEventLoop().getHandlers().get(abstractEvent.getClass())) {
 
             if (getAbstractEvent().isCanceled()) {
-                log.debug(String.format("[EventLoop] Stopped ExecutorThread %s due to abstractEvent cancellation!", Thread.currentThread()));
+                log.fine(String.format("[EventLoop] Stopped ExecutorThread %s due to abstractEvent cancellation!", Thread.currentThread()));
                 break;
             }
 
             Consumer<AbstractEvent<D>> handler = (Consumer<AbstractEvent<D>>) rawHandler;
 
-            try { handler.accept(getAbstractEvent()); }
+            try {
+                handler.accept(getAbstractEvent());
+            }
             catch (Exception e) {
-                log.error(ExceptionUtils.getStackTraceAsString(e));
+                log.fine(ExceptionUtils.getStackTraceAsString(e));
             }
 
         }

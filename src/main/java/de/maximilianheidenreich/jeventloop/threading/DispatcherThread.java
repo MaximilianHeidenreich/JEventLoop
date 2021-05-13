@@ -3,12 +3,12 @@ package de.maximilianheidenreich.jeventloop.threading;
 import de.maximilianheidenreich.jeventloop.EventLoop;
 import de.maximilianheidenreich.jeventloop.events.AbstractEvent;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.java.Log;
 
 /**
  * The dispatcher thread takes items from the eventQueue and dispatches a new executor task.
  */
-@Log4j
+@Log
 @Getter
 public class DispatcherThread implements Runnable {
 
@@ -31,7 +31,7 @@ public class DispatcherThread implements Runnable {
 
     @Override
     public void run() {
-        log.debug(String.format("[EventLoop] Started new DispatcherThread %s", Thread.currentThread()));
+        log.fine(String.format("[EventLoop] Started new DispatcherThread %s", Thread.currentThread()));
 
         try {
             while (!Thread.currentThread().isInterrupted() && !getEventLoop().getDispatchExecutor().isShutdown()) {
@@ -39,7 +39,7 @@ public class DispatcherThread implements Runnable {
                 getEventLoop().getTaskExecutor().submit(new ExecutorThread<>(getEventLoop(), abstractEvent));
             }
         } catch (InterruptedException e) {
-            log.debug("[EventLoop] Interrupted DispatcherThead " + Thread.currentThread());
+            log.fine("[EventLoop] Interrupted DispatcherThead " + Thread.currentThread());
         }
     }
 

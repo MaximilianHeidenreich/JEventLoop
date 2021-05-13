@@ -5,7 +5,7 @@ import de.maximilianheidenreich.jeventloop.events.TimingEvent;
 import de.maximilianheidenreich.jeventloop.threading.DispatcherThread;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.log4j.Log4j;
+import lombok.extern.java.Log;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 /**
  * An EventLoop that can dispatch events and
  */
-@Log4j
+@Log
 @Getter
 @Setter
 public class EventLoop {
@@ -131,7 +131,7 @@ public class EventLoop {
         // RET: Invalid event.
         if (event == null || event.getId() == null) return null;
 
-        log.trace("[EventLoop] Dispatching event " + event);
+        log.fine("[EventLoop] Dispatching event " + event);
 
         CompletableFuture<D> callback = new CompletableFuture<>();
         event.addCallback(callback);
@@ -153,7 +153,7 @@ public class EventLoop {
         getDispatchExecutor().submit(new DispatcherThread(this));
         setRunning(true);
 
-        log.trace("[EventLoop] Started!");
+        log.fine("[EventLoop] Started!");
     }
 
     /**
@@ -170,7 +170,7 @@ public class EventLoop {
         dispatch(new TimingEvent(0));   // Dirty hack to make sure the dispatcher can at least pull 1 last event from the queue and shuts down.
         setRunning(false);
 
-        log.trace("[EventLoop] Stopped!");
+        log.fine("[EventLoop] Stopped!");
     }
 
 }
